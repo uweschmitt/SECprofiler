@@ -21,27 +21,28 @@ findComplexFeaturesWithinWindow <- function(tracemat, corr.cutoff,
     if (nrow(tracemat) == 2) {
         corr <- proxy::simil(tracemat, method='correlation')[1]
         if (corr > corr.cutoff) {
-            group.assignment <- c(1, 1)
+            group.assignments <- c(1, 1)
         } else {
-            group.assignment <- c(1, 2)
+            group.assignments <- c(1, 2)
         }
-        return(group.assignment)
     }
-    # Compute distance between chromatograms as measured by the pearson
-    # correlation.
-    distance <- proxy::dist(tracemat, method='correlation')
-    # Cluster correlation vectors hierarchically s.t. proteins that correlate
-    # well with a similar group of other proteins cluster together.
-    cl <- hclust(distance)
-    if (with.plot) {
-        plot(cl)
-        abline(h=1 - corr.cutoff, col='red')
+    else {
+        # Compute distance between chromatograms as measured by the pearson
+        # correlation.
+        distance <- proxy::dist(tracemat, method='correlation')
+        # Cluster correlation vectors hierarchically s.t. proteins that correlate
+        # well with a similar group of other proteins cluster together.
+        cl <- hclust(distance)
+        if (with.plot) {
+            plot(cl)
+            abline(h=1 - corr.cutoff, col='red')
+        }
+        # Cut the dendrogram at specified distance.
+        # For example, if the requested correlation cutoff `corr.cutoff` is
+        # 0.7 then the height where the tree is cut is at 1-0.7=0.3.
+        # This process will result in a vector of group labels.
+        group.assignments <- cutree(cl, h=1 - corr.cutoff)
     }
-    # Cut the dendrogram at specified distance.
-    # For example, if the requested correlation cutoff `corr.cutoff` is
-    # 0.7 then the height where the tree is cut is at 1-0.7=0.3.
-    # This process will result in a vector of group labels.
-    group.assignments <- cutree(cl, h=1 - corr.cutoff)
 
     # Extract all subclusters and only keep those that have at least 2
     # members. For each subcluster recompute the correlation (without
@@ -142,6 +143,7 @@ findComplexFeatures <- function(trace.mat,
         # Produce a list of data.tables, each DT describes a subgroup in long list
         # format.
         subgroups.dt.list <- lapply(subgroups, function(grp) {
+            cat("grp = '"); print(grp); cat("'\n")
             subunits <- grp$subunits
             mean.corr <- grp$mean.corr
             rt.dt <- data.table(sec=i, protein_id=subunits,

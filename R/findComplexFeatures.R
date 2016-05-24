@@ -143,7 +143,6 @@ findComplexFeatures <- function(trace.mat,
         # Produce a list of data.tables, each DT describes a subgroup in long list
         # format.
         subgroups.dt.list <- lapply(subgroups, function(grp) {
-            cat("grp = '"); print(grp); cat("'\n")
             subunits <- grp$subunits
             mean.corr <- grp$mean.corr
             rt.dt <- data.table(sec=i, protein_id=subunits,
@@ -169,7 +168,7 @@ findComplexFeatures <- function(trace.mat,
     })
     groups.dt <- do.call(rbind, groups.dt.list)
 
-    if (nrow(groups.dt) > 0) {
+    if (length(groups.dt)> 0 && nrow(groups.dt) > 0) {
         groups.only <- subset(groups.dt, select=-protein_id)
         setkey(groups.only)
         groups.only <- unique(groups.only)
